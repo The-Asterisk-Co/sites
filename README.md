@@ -1,2 +1,3 @@
-# sites
-Created with Asterisk Sites
+# Asterisk Sites
+
+Create websites on Github Pages code-free.
