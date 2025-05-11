@@ -2,9 +2,344 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>sites</title>
-  <style>* { box-sizing: border-box; } body {margin: 0;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}*{box-sizing:border-box;}body{margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;}</style>
+  <title>Asterisk Sites</title>
+  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body><body id="idch"><div><h1>Welcome to my new site!</h1><p>Edit this page to get started.</p></div></body></body>
+<body>
+  <div class="topbar">
+    <div>
+      <button onclick="showPage('home')">Home</button>
+      <button onclick="showPage('editor')">Editor</button>
+      <button onclick="showPage('settings')">Settings</button>
+      <button onclick="saveToGitHub()" id="publish-button" class="button-primary">Publish</button>
+    </div>
+    <div id="current-repo">No repo</div>
+  </div>
+
+  <div id="home" class="page">
+    <h2>Your Sites</h2>
+    <button class="button-primary" onclick="createRepoAndEdit()">+ Create New Site</button>
+    <ul id="site-list"></ul>
+  </div>
+
+  <div id="settings" class="page">
+    <h2>Settings</h2>
+    <label>GitHub Access Token:</label><br>
+    <input type="password" id="token" placeholder="Enter your GitHub token" style="width: 300px;"/><br>
+    <p class="token-note">Note: Your token needs the 'repo' and 'pages' scope permissions.</p>
+    <button onclick="saveToken()">Save Token</button>
+  </div>
+
+  <div id="editor">
+    <div id="gjs"></div>
+  </div>
+
+  <script src="https://unpkg.com/grapesjs"></script>
+  <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
+  <script src="https://unpkg.com/grapesjs-plugin-ckeditor"></script>
+  <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
+  <script src="https://unpkg.com/grapesjs-plugin-export"></script>
+  <script src="https://unpkg.com/grapesjs-plugin-filestorage"></script>
+  <script src="https://unpkg.com/grapesjs-advance-components"></script>
+
+
+  <script>
+    let editor, savedHTML = '', savedCSS = '', githubToken = '', repoName = '', username = '';
+
+    function showPage(id) {
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('settings').style.display = 'none';
+      document.getElementById('editor').style.display = 'none';
+      document.getElementById(id).style.display = 'block';
+      document.getElementById('publish-button').style.display = (id === 'editor' && repoName) ? 'inline-block' : 'none';
+    }
+
+    function saveToken() {
+      githubToken = document.getElementById('token').value;
+      localStorage.setItem('githubToken', githubToken);
+      alert('Token saved!');
+      loadRepos();
+    }
+
+    function loadToken() {
+      githubToken = localStorage.getItem('githubToken') || '';
+      if (githubToken) document.getElementById('token').value = githubToken;
+      loadRepos();
+    }
+
+    async function loadRepos() {
+      if (!githubToken) return;
+      
+      try {
+        const response = await fetch('https://api.github.com/user/repos', {
+          headers: {
+            'Authorization': `token ${githubToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to load repositories');
+        }
+        
+        const repos = await response.json();
+        const list = document.getElementById('site-list');
+        list.innerHTML = '';
+        
+        repos.forEach(repo => {
+          const li = document.createElement('li');
+          li.textContent = repo.name;
+          li.style.cursor = 'pointer';
+          li.onclick = () => openRepo(repo.name, repo.owner.login);
+          
+          // Add link to published site if GitHub Pages is enabled
+          if (repo.has_pages) {
+            const link = document.createElement('a');
+            link.href = `https://${repo.owner.login}.github.io/${repo.name}`;
+            link.target = '_blank';
+            const linkbutton = document.createElement('button');
+            linkbutton.textContent = 'View Site';
+            link.appendChild(linkbutton);
+            li.appendChild(link);
+            list.appendChild(li);
+          }
+          
+        });
+      } catch (error) {
+        console.error('Error loading repositories:', error);
+        alert('Failed to load repositories. Please check your GitHub token.');
+      }
+    }
+
+    async function openRepo(name, user) {
+      repoName = name;
+      username = user;
+      document.getElementById('current-repo').innerText = `${username}/${repoName}`;
+      
+      try {
+        const resp = await fetch(`https://api.github.com/repos/${username}/${repoName}/contents/index.html`, {
+          headers: {
+            'Authorization': `token ${githubToken}`
+          }
+        });
+        
+        if (!resp.ok) {
+          console.warn('No index.html found, creating a new one');
+          initEditor();
+          showPage('editor');
+          return;
+        }
+        
+        const data = await resp.json();
+        const htmlContent = atob(data.content);
+        const styleMatch = htmlContent.match(/<style>([\s\S]*?)<\/style>/);
+        const bodyMatch = htmlContent.match(/<body>([\s\S]*?)<\/body>/);
+        
+        initEditor();
+        editor.setComponents(bodyMatch ? bodyMatch[1] : '');
+        editor.setStyle(styleMatch ? styleMatch[1] : '');
+        showPage('editor');
+      } catch (error) {
+        console.error('Error opening repository:', error);
+        alert('Error loading content from repository');
+      }
+    }
+
+    async function createRepoAndEdit() {
+      if (!githubToken) {
+        alert('Please set your GitHub token in Settings first');
+        showPage('settings');
+        return;
+      }
+
+      repoName = prompt('Enter repository name:');
+      if (!repoName) return;
+
+      try {
+        // Get user info
+        const userResp = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${githubToken}`
+          }
+        });
+        
+        if (!userResp.ok) {
+          throw new Error('Failed to get user information');
+        }
+        
+        const userInfo = await userResp.json();
+        username = userInfo.login;
+
+        // Create the repository
+        const createRepoResp = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            name: repoName, 
+            auto_init: true,
+            description: 'Created with Asterisk Sites'
+          })
+        });
+
+        if (!createRepoResp.ok) {
+          throw new Error('Repository creation failed');
+        }
+        
+        document.getElementById('current-repo').innerText = `${username}/${repoName}`;
+        
+        // Initialize the editor
+        initEditor();
+        showPage('editor');
+        
+        // Create and publish initial index.html
+        const initialHTML = '<div><h1>Welcome to my new site!</h1><p>Edit this page to get started.</p></div>';
+        editor.setComponents(initialHTML);
+        
+        // Save the initial content
+        await saveToGitHub();
+        
+        // Enable GitHub Pages
+        await enableGitHubPages();
+        
+        alert('Site created successfully and GitHub Pages enabled!');
+        
+        // Refresh the repo list
+        await loadRepos();
+      } catch (error) {
+        console.error('Error creating repository:', error);
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    async function enableGitHubPages() {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${username}/${repoName}/pages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            source: {
+              branch: 'main',
+              directory: '/'
+            }
+          })
+        });
+        
+        if (response.ok) {
+          console.log('GitHub Pages enabled successfully');
+          return true;
+        } else {
+          const errorData = await response.json();
+          throw new Error(`GitHub Pages setup failed: ${errorData.message}`);
+        }
+      } catch (error) {
+        console.error('Error enabling GitHub Pages:', error);
+        alert(`Failed to enable GitHub Pages: ${error.message}`);
+        return false;
+      }
+    }
+
+    function initEditor() {
+      if (editor) return;
+      editor = grapesjs.init({
+        container: '#gjs',
+        height: '100%',
+        storageManager: false,
+        plugins: [
+          'gjs-preset-webpage',
+          'grapesjs-plugin-ckeditor',
+          'grapesjs-blocks-basic',
+          'grapesjs-plugin-export',
+          'grapesjs-plugin-filestorage',
+          'grapesjs-advance-components'
+        ],
+        pluginsOpts: {
+          'gjs-preset-webpage': {
+            modalImportTitle: 'Import Template',
+            modalImportLabel: 'Paste your HTML/CSS here:',
+            modalImportContent: '<div>Paste your code here</div>'
+          }
+        }
+      });
+    }
+
+    async function saveToGitHub() {
+      try {
+        savedHTML = editor.getHtml();
+        savedCSS = editor.getCss();
+        const fullContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${repoName}</title>
+  <style>${savedCSS}</style>
+</head>
+<body>${savedHTML}</body>
+</html>`;
+
+        const path = 'index.html';
+        const apiUrl = `https://api.github.com/repos/${username}/${repoName}/contents/${path}`;
+
+        // Check if file already exists
+        let sha = undefined;
+        try {
+          const getResp = await fetch(apiUrl, {
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          
+          if (getResp.ok) {
+            const fileData = await getResp.json();
+            sha = fileData.sha;
+          }
+        } catch (error) {
+          console.log('File does not exist yet, creating new one');
+        }
+
+        // Update or create the file
+        const putResp = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Update site content',
+            content: btoa(unescape(encodeURIComponent(fullContent))),
+            sha,
+            committer: {
+              name: username,
+              email: `${username}@users.noreply.github.com`
+            }
+          })
+        });
+
+        if (putResp.ok) {
+          alert('Published successfully!');
+          return true;
+        } else {
+          throw new Error('Failed to save content to GitHub');
+        }
+      } catch (error) {
+        console.error('Error saving to GitHub:', error);
+        alert(`Failed to publish: ${error.message}`);
+        return false;
+      }
+    }
+
+    loadToken();
+    showPage('home');
+  </script>
+</body>
 </html>
