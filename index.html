@@ -3,8 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <title>Asterisk Sites</title>
-  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/content-tools@2.6.0/build/content-tools.min.css">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .page {
+      display: none;
+      padding: 20px;
+    }
+    .topbar {
+      background: #f5f5f5;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+    }
+    #current-repo {
+      font-family: monospace;
+      padding: 5px 10px;
+      background: #eee;
+      border-radius: 3px;
+    }
+    .button-primary {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .token-note {
+      font-size: 0.8em;
+      color: #666;
+    }
+    #site-list {
+      list-style: none;
+      padding: 0;
+    }
+    #site-list li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #site-list li:hover {
+      background: #f9f9f9;
+    }
+    #editor-content {
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
   <div class="topbar">
@@ -31,21 +82,16 @@
     <button onclick="saveToken()">Save Token</button>
   </div>
 
-  <div id="editor">
-    <div id="gjs"></div>
+  <div id="editor" class="page">
+    <div id="editor-content" data-editable data-name="main-content">
+      <!-- Editable content will be loaded here -->
+    </div>
   </div>
 
-  <script src="https://unpkg.com/grapesjs"></script>
-  <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
-  <script src="https://unpkg.com/grapesjs-plugin-ckeditor"></script>
-  <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
-  <script src="https://unpkg.com/grapesjs-plugin-export"></script>
-  <script src="https://unpkg.com/grapesjs-plugin-filestorage"></script>
-  <script src="https://unpkg.com/grapesjs-advance-components"></script>
-
-
+  <script src="https://cdn.jsdelivr.net/npm/content-tools@2.6.0/build/content-tools.min.js"></script>
   <script>
-    let editor, savedHTML = '', savedCSS = '', githubToken = '', repoName = '', username = '';
+    let savedHTML = '', githubToken = '', repoName = '', username = '';
+    let editor = null;
 
     function showPage(id) {
       document.getElementById('home').style.display = 'none';
@@ -53,6 +99,10 @@
       document.getElementById('editor').style.display = 'none';
       document.getElementById(id).style.display = 'block';
       document.getElementById('publish-button').style.display = (id === 'editor' && repoName) ? 'inline-block' : 'none';
+      
+      if (id === 'editor' && !editor) {
+        initEditor();
+      }
     }
 
     function saveToken() {
@@ -101,9 +151,9 @@
             linkbutton.textContent = 'View Site';
             link.appendChild(linkbutton);
             li.appendChild(link);
-            list.appendChild(li);
           }
           
+          list.appendChild(li);
         });
       } catch (error) {
         console.error('Error loading repositories:', error);
@@ -132,12 +182,14 @@
         
         const data = await resp.json();
         const htmlContent = atob(data.content);
-        const styleMatch = htmlContent.match(/<style>([\s\S]*?)<\/style>/);
-        const bodyMatch = htmlContent.match(/<body>([\s\S]*?)<\/body>/);
         
+        // Extract just the body content for editing
+        const bodyStart = htmlContent.indexOf('<body>') + 6;
+        const bodyEnd = htmlContent.indexOf('</body>');
+        const bodyContent = htmlContent.substring(bodyStart, bodyEnd);
+        
+        document.getElementById('editor-content').innerHTML = bodyContent;
         initEditor();
-        editor.setComponents(bodyMatch ? bodyMatch[1] : '');
-        editor.setStyle(styleMatch ? styleMatch[1] : '');
         showPage('editor');
       } catch (error) {
         console.error('Error opening repository:', error);
@@ -191,13 +243,14 @@
         
         document.getElementById('current-repo').innerText = `${username}/${repoName}`;
         
-        // Initialize the editor
+        // Initialize the editor with default content
+        document.getElementById('editor-content').innerHTML = `
+          <h1 data-ce-tag="h1">Welcome to my new site!</h1>
+          <p data-ce-tag="p">Edit this page to get started.</p>
+        `;
+        
         initEditor();
         showPage('editor');
-        
-        // Create and publish initial index.html
-        const initialHTML = '<div><h1>Welcome to my new site!</h1><p>Edit this page to get started.</p></div>';
-        editor.setComponents(initialHTML);
         
         // Save the initial content
         await saveToGitHub();
@@ -248,41 +301,47 @@
 
     function initEditor() {
       if (editor) return;
-      editor = grapesjs.init({
-        container: '#gjs',
-        height: '100%',
-        storageManager: false,
-        plugins: [
-          'gjs-preset-webpage',
-          'grapesjs-plugin-ckeditor',
-          'grapesjs-blocks-basic',
-          'grapesjs-plugin-export',
-          'grapesjs-plugin-filestorage',
-          'grapesjs-advance-components'
-        ],
-        pluginsOpts: {
-          'gjs-preset-webpage': {
-            modalImportTitle: 'Import Template',
-            modalImportLabel: 'Paste your HTML/CSS here:',
-            modalImportContent: '<div>Paste your code here</div>'
-          }
+      
+      // Initialize ContentTools
+      ContentTools.StylePalette.add([
+        new ContentTools.Style('Title', 'title', ['h1']),
+        new ContentTools.Style('Subtitle', 'subtitle', ['h2']),
+        new ContentTools.Style('Paragraph', 'paragraph', ['p']),
+        new ContentTools.Style('Button', 'button', ['a', 'button'])
+      ]);
+      
+      editor = ContentTools.EditorApp.get();
+      editor.init('[data-editable]', 'data-name');
+      
+      // Add save handler
+      editor.addEventListener('saved', function (ev) {
+        const regions = ev.detail().regions;
+        if (regions && regions['main-content']) {
+          savedHTML = regions['main-content'];
+          document.getElementById('editor-content').innerHTML = savedHTML;
         }
       });
     }
 
     async function saveToGitHub() {
       try {
-        savedHTML = editor.getHtml();
-        savedCSS = editor.getCss();
+        // Save any pending changes in the editor
+        if (editor) {
+          editor.save(true);
+        }
+        
+        // Get the current content
+        const bodyContent = document.getElementById('editor-content').innerHTML;
+        
         const fullContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${repoName}</title>
-  <style>${savedCSS}</style>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>${savedHTML}</body>
+<body>${bodyContent}</body>
 </html>`;
 
         const path = 'index.html';
