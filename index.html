@@ -3,8 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <title>Asterisk Sites</title>
-  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <!-- ContentTools CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ContentTools/1.6.9/content-tools.min.css">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Additional styles for ContentTools editor */
+    .page {
+      display: none;
+      padding: 20px;
+    }
+    
+    #editor {
+      height: calc(100vh - 50px);
+      display: none;
+    }
+    
+    .editor-container {
+      height: 100%;
+      border: 1px solid #ccc;
+      overflow: auto;
+    }
+    
+    .editable {
+      padding: 20px;
+      min-height: 500px;
+      outline: none;
+    }
+    
+    [data-editable] {
+      border: dotted 1px #ddd;
+      min-height: 30px;
+    }
+    
+    [data-fixture] {
+      background-color: #f7f7f7;
+      padding: 10px;
+    }
+    
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    #site-list li {
+      padding: 10px;
+      margin: 5px 0;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .button-primary {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    
+    .token-note {
+      font-size: 0.8em;
+      color: #666;
+    }
+    
+    /* ContentTools specific styles */
+    .ce-element--focused {
+      outline: 2px solid #2980b9;
+    }
+    
+    .ce-element--over {
+      background-color: rgba(41, 128, 185, 0.1);
+    }
+  </style>
 </head>
 <body>
   <div class="topbar">
@@ -32,25 +106,24 @@
   </div>
 
   <div id="editor">
-    <div id="gjs"></div>
+    <div class="editor-container">
+      <div data-editable data-name="main-content" class="editable">
+        <h1>Welcome to your new site!</h1>
+        <p>Start editing this content to create your website.</p>
+      </div>
+    </div>
   </div>
 
-  <script src="https://unpkg.com/grapesjs"></script>
-
-  <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
-
-  <script src="https://unpkg.com/grapesjs-plugin-ckeditor"></script>
-
-  <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
-
-  <script src="https://unpkg.com/grapesjs-plugin-export"></script>
-
-  <script src="https://unpkg.com/grapesjs-plugin-filestorage"></script>
-
-  <script src="https://unpkg.com/grapesjs-advance-components"></script>
+  <!-- ContentTools JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ContentTools/1.6.9/content-tools.min.js"></script>
 
   <script>
-    let editor, savedHTML = '', savedCSS = '', githubToken = '', repoName = '', username = '';
+    let editor = null;
+    let savedHTML = '';
+    let savedCSS = '';
+    let githubToken = '';
+    let repoName = '';
+    let username = '';
 
     function showPage(id) {
       document.getElementById('home').style.display = 'none';
@@ -58,6 +131,10 @@
       document.getElementById('editor').style.display = 'none';
       document.getElementById(id).style.display = 'block';
       document.getElementById('publish-button').style.display = (id === 'editor' && repoName) ? 'inline-block' : 'none';
+      
+      if (id === 'editor' && !editor) {
+        initEditor();
+      }
     }
 
     function saveToken() {
@@ -130,19 +207,19 @@
         
         if (!resp.ok) {
           console.warn('No index.html found, creating a new one');
-          initEditor();
           showPage('editor');
           return;
         }
         
         const data = await resp.json();
         const htmlContent = atob(data.content);
-        const styleMatch = htmlContent.match(/<style>([\s\S]*?)<\/style>/);
         const bodyMatch = htmlContent.match(/<body>([\s\S]*?)<\/body>/);
         
-        initEditor();
-        editor.setComponents(bodyMatch ? bodyMatch[1] : '');
-        editor.setStyle(styleMatch ? styleMatch[1] : '');
+        if (bodyMatch) {
+          const editable = document.querySelector('[data-editable]');
+          editable.innerHTML = bodyMatch[1];
+        }
+        
         showPage('editor');
       } catch (error) {
         console.error('Error opening repository:', error);
@@ -196,13 +273,12 @@
         
         document.getElementById('current-repo').innerText = `${username}/${repoName}`;
         
-        // Initialize the editor
-        initEditor();
-        showPage('editor');
+        // Reset editor content to default
+        const editable = document.querySelector('[data-editable]');
+        editable.innerHTML = '<h1>Welcome to my new site!</h1><p>Edit this page to get started.</p>';
         
-        // Create and publish initial index.html
-        const initialHTML = '<div><h1>Welcome to my new site!</h1><p>Edit this page to get started.</p></div>';
-        editor.setComponents(initialHTML);
+        // Show the editor
+        showPage('editor');
         
         // Save the initial content
         await saveToGitHub();
@@ -252,33 +328,52 @@
     }
 
     function initEditor() {
-      if (editor) return;
-      editor = grapesjs.init({
-        container: '#gjs',
-        height: '100%',
-        storageManager: false,
-        plugins: [
-          'gjs-preset-webpage',
-          'grapesjs-plugin-ckeditor',
-          'grapesjs-blocks-basic',
-          'grapesjs-plugin-export',
-          'grapesjs-plugin-filestorage',
-          'grapesjs-advance-components'
-        ],
-        pluginsOpts: {
-          'gjs-preset-webpage': {
-            modalImportTitle: 'Import Template',
-            modalImportLabel: 'Paste your HTML/CSS here:',
-            modalImportContent: '<div>Paste your code here</div>'
-          }
-        }
+      if (editor) {
+        editor.destroy();
+        editor = null;
+      }
+      
+      // Initialize ContentTools editor
+      editor = ContentTools.EditorApp.get();
+      editor.init('*[data-editable]', 'data-name');
+      
+      // Add save event handler
+      editor.addEventListener('saved', function (ev) {
+        const regions = ev.detail().regions;
+        console.log('Content saved', regions);
+        savedHTML = regions['main-content'];
       });
     }
 
     async function saveToGitHub() {
       try {
-        savedHTML = editor.getHtml();
-        savedCSS = editor.getCss();
+        if (editor) {
+          // Tell the editor to save - this will trigger the 'saved' event
+          editor.save(true);
+        } else {
+          // If editor not initialized, get content directly
+          savedHTML = document.querySelector('[data-editable]').innerHTML;
+        }
+        
+        // Simple default CSS
+        savedCSS = `
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          h1, h2, h3 {
+            color: #333;
+          }
+          img {
+            max-width: 100%;
+            height: auto;
+          }
+        `;
+        
         const fullContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -286,66 +381,65 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${repoName}</title>
   <style>${savedCSS}</style>
-
 </head>
 <body>${savedHTML}</body>
 </html>`;
 
-    const path = 'index.html';
-    const apiUrl = `https://api.github.com/repos/${username}/${repoName}/contents/${path}`;
+        const path = 'index.html';
+        const apiUrl = `https://api.github.com/repos/${username}/${repoName}/contents/${path}`;
 
-    // Check if file already exists
-    let sha = undefined;
-    try {
-      const getResp = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `token ${githubToken}`,
-          'Accept': 'application/vnd.github.v3+json'
+        // Check if file already exists
+        let sha = undefined;
+        try {
+          const getResp = await fetch(apiUrl, {
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          
+          if (getResp.ok) {
+            const fileData = await getResp.json();
+            sha = fileData.sha;
+          }
+        } catch (error) {
+          console.log('File does not exist yet, creating new one');
         }
-      });
-      
-      if (getResp.ok) {
-        const fileData = await getResp.json();
-        sha = fileData.sha;
+
+        // Update or create the file
+        const putResp = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Update site content',
+            content: btoa(unescape(encodeURIComponent(fullContent))),
+            sha,
+            committer: {
+              name: username,
+              email: `${username}@users.noreply.github.com`
+            }
+          })
+        });
+
+        if (putResp.ok) {
+          alert('Published successfully!');
+          return true;
+        } else {
+          throw new Error('Failed to save content to GitHub');
+        }
+      } catch (error) {
+        console.error('Error saving to GitHub:', error);
+        alert(`Failed to publish: ${error.message}`);
+        return false;
       }
-    } catch (error) {
-      console.log('File does not exist yet, creating new one');
     }
 
-    // Update or create the file
-    const putResp = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${githubToken}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Update site content',
-        content: btoa(unescape(encodeURIComponent(fullContent))),
-        sha,
-        committer: {
-          name: username,
-          email: `${username}@users.noreply.github.com`
-        }
-      })
-    });
-
-    if (putResp.ok) {
-      alert('Published successfully!');
-      return true;
-    } else {
-      throw new Error('Failed to save content to GitHub');
-    }
-  } catch (error) {
-    console.error('Error saving to GitHub:', error);
-    alert(`Failed to publish: ${error.message}`);
-    return false;
-  }
-}
-
-loadToken();
-showPage('home');
- </script>
+    loadToken();
+    showPage('home');
+  </script>
 </body>
 </html>
