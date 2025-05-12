@@ -2,679 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Asterisk Sites v2</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      line-height: 1.5;
-      color: #333;
-    }
-    
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 60px;
-      padding: 0 20px;
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #dee2e6;
-    }
-    
-    .topbar button {
-      background: none;
-      border: none;
-      padding: 8px 16px;
-      margin-right: 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #495057;
-    }
-    
-    .topbar button:hover {
-      background-color: #e9ecef;
-    }
-    
-    .button-primary {
-      background-color: #007bff !important;
-      color: white !important;
-    }
-    
-    .button-primary:hover {
-      background-color: #0069d9 !important;
-    }
-    
-    .page {
-      display: none;
-      height: calc(100vh - 60px);
-      overflow: auto;
-      padding: 20px;
-    }
-    
-    #editor {
-      padding: 0;
-    }
-    
-    #editor-container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .editor-toolbar {
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #dee2e6;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-    }
-    
-    .editor-content {
-      flex: 1;
-      position: relative;
-    }
-    
-    #site-list {
-      list-style: none;
-      margin-top: 20px;
-    }
-    
-    #site-list li {
-      padding: 16px;
-      margin-bottom: 10px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #dee2e6;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-    }
-    
-    #site-list li:hover {
-      background-color: #e9ecef;
-    }
-    
-    .site-actions {
-      display: flex;
-      gap: 10px;
-    }
-    
-    h2 {
-      margin-bottom: 20px;
-      color: #212529;
-    }
-    
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
-    }
-    
-    .token-note {
-      font-size: 12px;
-      color: #6c757d;
-      margin-bottom: 15px;
-    }
-    
-    .hidden {
-      display: none !important;
-    }
-    
-    #current-repo {
-      font-weight: 500;
-      color: #495057;
-    }
-    
-    .component-menu {
-      background-color: #f8f9fa;
-      border-right: 1px solid #dee2e6;
-      width: 250px;
-      overflow-y: auto;
-      padding: 15px;
-    }
-    
-    .component-menu button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 8px;
-      text-align: left;
-      background-color: #e9ecef;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    .component-menu button:hover {
-      background-color: #dee2e6;
-    }
-    
-    .editor-main {
-      flex: 1;
-      display: flex;
-    }
-    
-    #editor-canvas {
-      flex: 1;
-      overflow: auto;
-      padding: 20px;
-      background-color: #fff;
-    }
-    
-    .editor-properties {
-      width: 280px;
-      background-color: #f8f9fa;
-      border-left: 1px solid #dee2e6;
-      padding: 15px;
-      overflow-y: auto;
-    }
-    
-    .property-group {
-      margin-bottom: 20px;
-    }
-    
-    .property-group h4 {
-      margin-bottom: 10px;
-      font-size: 14px;
-      color: #495057;
-    }
-    
-    .property-row {
-      display: flex;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    
-    .property-label {
-      flex: 0 0 80px;
-      font-size: 12px;
-    }
-    
-    .property-value {
-      flex: 1;
-    }
-    
-    .property-value input,
-    .property-value select {
-      width: 100%;
-      padding: 6px;
-      border: 1px solid #ced4da;
-      border-radius: 3px;
-      font-size: 12px;
-    }
-    
-    /* Loading indicator */
-    .loading {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    
-    .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border-left-color: #007bff;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+  <title>Asterisk Sites</title>
+  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="topbar">
     <div>
-      <button onclick="showPage('home')"><i class="fas fa-home"></i> Home</button>
-      <button onclick="showPage('editor')" id="editor-nav-button"><i class="fas fa-edit"></i> Editor</button>
-      <button onclick="showPage('settings')"><i class="fas fa-cog"></i> Settings</button>
-      <button onclick="saveToGitHub()" id="publish-button" class="button-primary hidden"><i class="fas fa-cloud-upload-alt"></i> Publish</button>
+      <button onclick="showPage('home')">Home</button>
+      <button onclick="showPage('editor')">Editor</button>
+      <button onclick="showPage('settings')">Settings</button>
+      <button onclick="saveToGitHub()" id="publish-button" class="button-primary">Publish</button>
     </div>
-    <div id="current-repo">No repo selected</div>
+    <div id="current-repo">No repo</div>
   </div>
 
   <div id="home" class="page">
     <h2>Your Sites</h2>
-    <button class="button-primary" onclick="createRepoAndEdit()"><i class="fas fa-plus"></i> Create New Site</button>
+    <button class="button-primary" onclick="createRepoAndEdit()">+ Create New Site</button>
     <ul id="site-list"></ul>
   </div>
 
   <div id="settings" class="page">
     <h2>Settings</h2>
-    <label>GitHub Access Token:</label>
-    <input type="password" id="token" placeholder="Enter your GitHub token" />
+    <label>GitHub Access Token:</label><br>
+    <input type="password" id="token" placeholder="Enter your GitHub token" style="width: 300px;"/><br>
     <p class="token-note">Note: Your token needs the 'repo' and 'pages' scope permissions.</p>
-    <button class="button-primary" onclick="saveToken()">Save Token</button>
+    <button onclick="saveToken()">Save Token</button>
   </div>
 
-  <div id="editor" class="page">
-    <div id="editor-container">
-      <div class="editor-toolbar">
-        <div>
-          <button onclick="toggleComponentMenu()"><i class="fas fa-th-large"></i> Components</button>
-          <button onclick="togglePropertiesPanel()"><i class="fas fa-sliders-h"></i> Properties</button>
-          <button onclick="previewPage()"><i class="fas fa-eye"></i> Preview</button>
-        </div>
-        <div>
-          <button onclick="undoAction()"><i class="fas fa-undo"></i></button>
-          <button onclick="redoAction()"><i class="fas fa-redo"></i></button>
-          <button onclick="saveEditorContent()" class="button-primary"><i class="fas fa-save"></i> Save</button>
-        </div>
-      </div>
-      <div class="editor-main">
-        <div class="component-menu" id="component-menu">
-          <h4>Basic Elements</h4>
-          <button onclick="addComponent('heading')"><i class="fas fa-heading"></i> Heading</button>
-          <button onclick="addComponent('paragraph')"><i class="fas fa-paragraph"></i> Paragraph</button>
-          <button onclick="addComponent('image')"><i class="fas fa-image"></i> Image</button>
-          <button onclick="addComponent('button')"><i class="fas fa-square"></i> Button</button>
-          <button onclick="addComponent('divider')"><i class="fas fa-minus"></i> Divider</button>
-          
-          <h4>Layout</h4>
-          <button onclick="addComponent('container')"><i class="fas fa-square-full"></i> Container</button>
-          <button onclick="addComponent('twoColumns')"><i class="fas fa-columns"></i> Two Columns</button>
-          <button onclick="addComponent('threeColumns')"><i class="fas fa-table-columns"></i> Three Columns</button>
-          
-          <h4>Advanced</h4>
-          <button onclick="addComponent('navbar')"><i class="fas fa-bars"></i> Navigation Bar</button>
-          <button onclick="addComponent('footer')"><i class="fas fa-shoe-prints"></i> Footer</button>
-          <button onclick="addComponent('card')"><i class="fas fa-credit-card"></i> Card</button>
-          <button onclick="addComponent('form')"><i class="fas fa-wpforms"></i> Form</button>
-        </div>
-        <div id="editor-canvas">
-          <div id="page-content" class="page-content"></div>
-        </div>
-        <div class="editor-properties" id="properties-panel">
-          <h4>Element Properties</h4>
-          <div id="no-selection">
-            <p>No element selected</p>
-          </div>
-          <div id="element-properties" class="hidden">
-            <!-- Properties will be dynamically inserted here -->
-          </div>
-        </div>
-      </div>
-    </div>
+  <div id="editor">
+    <div id="gjs"></div>
   </div>
+
+  <script src="https://unpkg.com/grapesjs"></script>
+  <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
+  <script src="https://unpkg.com/grapesjs-plugin-ckeditor"></script>
+  <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
+  <script src="https://unpkg.com/grapesjs-plugin-export"></script>
+  <script src="https://unpkg.com/grapesjs-plugin-filestorage"></script>
+  <script src="https://unpkg.com/grapesjs-advance-components"></script>
+
 
   <script>
-    // Global variables
-    let githubToken = '';
-    let repoName = '';
-    let username = '';
-    let pageContent = '';
-    let pageStyles = '';
-    let selectedElement = null;
-    let editorHistory = [];
-    let historyIndex = -1;
-    let isEditMode = true;
-    
-    // Editor state
-    const editorState = {
-      components: [],
-      nextId: 1,
-      selectedId: null
-    };
+    let editor, savedHTML = '', savedCSS = '', githubToken = '', repoName = '', username = '';
 
-    // Component templates
-    const componentTemplates = {
-      heading: {
-        html: '<h2 id="component-${id}" class="editable-component" data-type="heading">Heading Text</h2>',
-        properties: {
-          text: { type: 'text', default: 'Heading Text' },
-          size: { type: 'select', options: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], default: 'h2' },
-          align: { type: 'select', options: ['left', 'center', 'right'], default: 'left' }
-        }
-      },
-      paragraph: {
-        html: '<p id="component-${id}" class="editable-component" data-type="paragraph">This is a paragraph of text. Click to edit.</p>',
-        properties: {
-          text: { type: 'textarea', default: 'This is a paragraph of text. Click to edit.' },
-          align: { type: 'select', options: ['left', 'center', 'right', 'justify'], default: 'left' }
-        }
-      },
-      image: {
-        html: '<img id="component-${id}" class="editable-component" data-type="image" src="https://via.placeholder.com/400x200" alt="Image description" />',
-        properties: {
-          src: { type: 'text', default: 'https://via.placeholder.com/400x200' },
-          alt: { type: 'text', default: 'Image description' },
-          width: { type: 'text', default: '100%' }
-        }
-      },
-      button: {
-        html: '<button id="component-${id}" class="editable-component" data-type="button">Click Me</button>',
-        properties: {
-          text: { type: 'text', default: 'Click Me' },
-          style: { type: 'select', options: ['default', 'primary', 'outline', 'link'], default: 'default' }
-        }
-      },
-      divider: {
-        html: '<hr id="component-${id}" class="editable-component" data-type="divider" />',
-        properties: {
-          style: { type: 'select', options: ['solid', 'dashed', 'dotted'], default: 'solid' }
-        }
-      },
-      container: {
-        html: '<div id="component-${id}" class="editable-component container" data-type="container"><div class="container-content dropzone"></div></div>',
-        properties: {
-          width: { type: 'select', options: ['full', 'wide', 'narrow'], default: 'wide' },
-          background: { type: 'color', default: '#ffffff' }
-        }
-      },
-      twoColumns: {
-        html: `<div id="component-${id}" class="editable-component two-columns" data-type="twoColumns">
-                <div class="column dropzone"></div>
-                <div class="column dropzone"></div>
-               </div>`,
-        properties: {
-          gap: { type: 'select', options: ['none', 'small', 'medium', 'large'], default: 'medium' },
-          distribution: { type: 'select', options: ['equal', 'left-wide', 'right-wide'], default: 'equal' }
-        }
-      },
-      threeColumns: {
-        html: `<div id="component-${id}" class="editable-component three-columns" data-type="threeColumns">
-                <div class="column dropzone"></div>
-                <div class="column dropzone"></div>
-                <div class="column dropzone"></div>
-               </div>`,
-        properties: {
-          gap: { type: 'select', options: ['none', 'small', 'medium', 'large'], default: 'medium' }
-        }
-      },
-      navbar: {
-        html: `<nav id="component-${id}" class="editable-component navbar" data-type="navbar">
-                <div class="navbar-brand">Site Name</div>
-                <ul class="navbar-menu">
-                  <li class="navbar-item"><a href="#">Home</a></li>
-                  <li class="navbar-item"><a href="#">About</a></li>
-                  <li class="navbar-item"><a href="#">Services</a></li>
-                  <li class="navbar-item"><a href="#">Contact</a></li>
-                </ul>
-               </nav>`,
-        properties: {
-          brand: { type: 'text', default: 'Site Name' },
-          layout: { type: 'select', options: ['left', 'center', 'space-between'], default: 'space-between' }
-        }
-      },
-      footer: {
-        html: `<footer id="component-${id}" class="editable-component footer" data-type="footer">
-                <div class="footer-content">
-                  <p>© 2025 Your Company. All rights reserved.</p>
-                </div>
-               </footer>`,
-        properties: {
-          text: { type: 'textarea', default: '© 2025 Your Company. All rights reserved.' },
-          layout: { type: 'select', options: ['basic', 'columns', 'centered'], default: 'basic' }
-        }
-      },
-      card: {
-        html: `<div id="component-${id}" class="editable-component card" data-type="card">
-                <div class="card-image">
-                  <img src="https://via.placeholder.com/300x200" alt="Card image">
-                </div>
-                <div class="card-body">
-                  <h3 class="card-title">Card Title</h3>
-                  <p class="card-text">This is some sample text for the card.</p>
-                  <button class="card-button">Learn More</button>
-                </div>
-               </div>`,
-        properties: {
-          title: { type: 'text', default: 'Card Title' },
-          text: { type: 'textarea', default: 'This is some sample text for the card.' },
-          buttonText: { type: 'text', default: 'Learn More' },
-          imageUrl: { type: 'text', default: 'https://via.placeholder.com/300x200' }
-        }
-      },
-      form: {
-        html: `<form id="component-${id}" class="editable-component form" data-type="form">
-                <div class="form-group">
-                  <label for="name">Name</label>
-                  <input type="text" id="name" placeholder="Enter your name">
-                </div>
-                <div class="form-group">
-                  <label for="email">Email</label>
-                  <input type="email" id="email" placeholder="Enter your email">
-                </div>
-                <div class="form-group">
-                  <label for="message">Message</label>
-                  <textarea id="message" placeholder="Your message"></textarea>
-                </div>
-                <button type="submit" class="form-submit">Submit</button>
-               </form>`,
-        properties: {
-          submitText: { type: 'text', default: 'Submit' },
-          layout: { type: 'select', options: ['vertical', 'compact', 'inline'], default: 'vertical' }
-        }
-      }
-    };
-
-    // Component CSS
-    const componentCSS = `
-      .page-content {
-        min-height: 100%;
-      }
-      
-      .container {
-        padding: 15px;
-        margin-bottom: 15px;
-        border: 1px dashed #dee2e6;
-      }
-      
-      .container-content {
-        width: 100%;
-        min-height: 50px;
-      }
-      
-      .two-columns {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 15px;
-      }
-      
-      .two-columns .column {
-        flex: 1;
-        min-height: 50px;
-        border: 1px dashed #dee2e6;
-        padding: 10px;
-      }
-      
-      .three-columns {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 15px;
-      }
-      
-      .three-columns .column {
-        flex: 1;
-        min-height: 50px;
-        border: 1px dashed #dee2e6;
-        padding: 10px;
-      }
-      
-      .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        background-color: #f8f9fa;
-        margin-bottom: 15px;
-      }
-      
-      .navbar-brand {
-        font-weight: bold;
-        font-size: 1.25rem;
-      }
-      
-      .navbar-menu {
-        display: flex;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      
-      .navbar-item {
-        margin-left: 20px;
-      }
-      
-      .navbar-item a {
-        text-decoration: none;
-        color: #495057;
-      }
-      
-      .footer {
-        padding: 20px 15px;
-        background-color: #f8f9fa;
-        text-align: center;
-        margin-top: 30px;
-      }
-      
-      .card {
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 15px;
-      }
-      
-      .card-image img {
-        width: 100%;
-      }
-      
-      .card-body {
-        padding: 15px;
-      }
-      
-      .card-title {
-        margin-top: 0;
-        margin-bottom: 10px;
-      }
-      
-      .card-button {
-        display: inline-block;
-        padding: 6px 12px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-      }
-      
-      .form {
-        margin-bottom: 15px;
-      }
-      
-      .form-group {
-        margin-bottom: 15px;
-      }
-      
-      .form-group label {
-        display: block;
-        margin-bottom: 5px;
-      }
-      
-      .form-group input,
-      .form-group textarea {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-      }
-      
-      .form-group textarea {
-        min-height: 100px;
-      }
-      
-      .form-submit {
-        padding: 8px 16px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      
-      /* Editor Styles */
-      .editable-component {
-        position: relative;
-        min-height: 20px;
-        padding: 3px;
-        margin: 3px 0;
-        border: 1px solid transparent;
-        transition: border-color 0.2s;
-      }
-      
-      .editable-component:hover {
-        border-color: #adb5bd;
-      }
-      
-      .editable-component.selected {
-        border-color: #007bff;
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-      }
-      
-      .dropzone {
-        min-height: 50px;
-        padding: 5px;
-        border: 1px dashed #dee2e6;
-      }
-      
-      .dropzone.dragover {
-        background-color: #e9ecef;
-      }
-      
-      /* Preview mode */
-      .preview-mode .editable-component {
-        border-color: transparent;
-        box-shadow: none;
-      }
-      
-      .preview-mode .editable-component:hover {
-        border-color: transparent;
-      }
-      
-      .preview-mode .dropzone {
-        border: none;
-        padding: 0;
-      }
-    `;
-
-    // Show specific page
     function showPage(id) {
       document.getElementById('home').style.display = 'none';
       document.getElementById('settings').style.display = 'none';
       document.getElementById('editor').style.display = 'none';
       document.getElementById(id).style.display = 'block';
-      
-      if (id === 'editor' && repoName) {
-        document.getElementById('publish-button').classList.remove('hidden');
-      } else {
-        document.getElementById('publish-button').classList.add('hidden');
-      }
+      document.getElementById('publish-button').style.display = (id === 'editor' && repoName) ? 'inline-block' : 'none';
     }
 
-    // Save GitHub token
     function saveToken() {
       githubToken = document.getElementById('token').value;
       localStorage.setItem('githubToken', githubToken);
@@ -682,20 +62,16 @@
       loadRepos();
     }
 
-    // Load GitHub token
     function loadToken() {
       githubToken = localStorage.getItem('githubToken') || '';
       if (githubToken) document.getElementById('token').value = githubToken;
       loadRepos();
     }
 
-    // Load repositories from GitHub
     async function loadRepos() {
       if (!githubToken) return;
       
       try {
-        showLoading(true);
-        
         const response = await fetch('https://api.github.com/user/repos', {
           headers: {
             'Authorization': `token ${githubToken}`
@@ -712,56 +88,35 @@
         
         repos.forEach(repo => {
           const li = document.createElement('li');
+          li.textContent = repo.name;
+          li.style.cursor = 'pointer';
+          li.onclick = () => openRepo(repo.name, repo.owner.login);
           
-          const nameDiv = document.createElement('div');
-          nameDiv.textContent = repo.name;
-          nameDiv.style.fontWeight = '500';
-          li.appendChild(nameDiv);
-          
-          const actionsDiv = document.createElement('div');
-          actionsDiv.className = 'site-actions';
-          
-          // Edit button
-          const editBtn = document.createElement('button');
-          editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
-          editBtn.onclick = (e) => {
-            e.stopPropagation();
-            openRepo(repo.name, repo.owner.login);
-          };
-          actionsDiv.appendChild(editBtn);
-          
-          // View site button if GitHub Pages is enabled
+          // Add link to published site if GitHub Pages is enabled
           if (repo.has_pages) {
-            const viewBtn = document.createElement('button');
-            viewBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> View';
-            viewBtn.onclick = (e) => {
-              e.stopPropagation();
-              window.open(`https://${repo.owner.login}.github.io/${repo.name}`, '_blank');
-            };
-            actionsDiv.appendChild(viewBtn);
+            const link = document.createElement('a');
+            link.href = `https://${repo.owner.login}.github.io/${repo.name}`;
+            link.target = '_blank';
+            const linkbutton = document.createElement('button');
+            linkbutton.textContent = 'View Site';
+            link.appendChild(linkbutton);
+            li.appendChild(link);
+            list.appendChild(li);
           }
           
-          li.appendChild(actionsDiv);
-          list.appendChild(li);
         });
-        
-        showLoading(false);
       } catch (error) {
         console.error('Error loading repositories:', error);
         alert('Failed to load repositories. Please check your GitHub token.');
-        showLoading(false);
       }
     }
 
-    // Open repository
     async function openRepo(name, user) {
       repoName = name;
       username = user;
       document.getElementById('current-repo').innerText = `${username}/${repoName}`;
       
       try {
-        showLoading(true);
-        
         const resp = await fetch(`https://api.github.com/repos/${username}/${repoName}/contents/index.html`, {
           headers: {
             'Authorization': `token ${githubToken}`
@@ -777,36 +132,19 @@
         
         const data = await resp.json();
         const htmlContent = atob(data.content);
-        
-        // Extract body content
-        const bodyMatch = htmlContent.match(/<body>([\s\S]*?)<\/body>/);
-        const bodyContent = bodyMatch ? bodyMatch[1] : '';
-        
-        // Extract styles
         const styleMatch = htmlContent.match(/<style>([\s\S]*?)<\/style>/);
-        const styleContent = styleMatch ? styleMatch[1] : '';
+        const bodyMatch = htmlContent.match(/<body>([\s\S]*?)<\/body>/);
         
-        // Initialize editor with content
         initEditor();
-        document.getElementById('page-content').innerHTML = bodyContent;
-        pageStyles = styleContent;
-        
-        // Process loaded components
-        const components = document.querySelectorAll('.editable-component');
-        components.forEach(comp => {
-          setupComponent(comp);
-        });
-        
+        editor.setComponents(bodyMatch ? bodyMatch[1] : '');
+        editor.setStyle(styleMatch ? styleMatch[1] : '');
         showPage('editor');
-        showLoading(false);
       } catch (error) {
         console.error('Error opening repository:', error);
         alert('Error loading content from repository');
-        showLoading(false);
       }
     }
 
-    // Create new repository and open editor
     async function createRepoAndEdit() {
       if (!githubToken) {
         alert('Please set your GitHub token in Settings first');
@@ -816,10 +154,8 @@
 
       repoName = prompt('Enter repository name:');
       if (!repoName) return;
-      
+
       try {
-        showLoading(true);
-        
         // Get user info
         const userResp = await fetch('https://api.github.com/user', {
           headers: {
@@ -855,39 +191,30 @@
         
         document.getElementById('current-repo').innerText = `${username}/${repoName}`;
         
-        // Initialize the editor with starter content
+        // Initialize the editor
         initEditor();
+        showPage('editor');
         
-        // Add a welcome message
-        const welcomeHeading = createComponent('heading');
-        welcomeHeading.querySelector('h2').textContent = 'Welcome to your new site!';
+        // Create and publish initial index.html
+        const initialHTML = '<div><h1>Welcome to my new site!</h1><p>Edit this page to get started.</p></div>';
+        editor.setComponents(initialHTML);
         
-        const welcomePara = createComponent('paragraph');
-        welcomePara.querySelector('p').textContent = 'This is a starter template for your website. Use the components panel on the left to add more elements and customize your site.';
-        
-        document.getElementById('page-content').appendChild(welcomeHeading);
-        document.getElementById('page-content').appendChild(welcomePara);
-        
-        // Save initial content
-        saveToGitHub();
+        // Save the initial content
+        await saveToGitHub();
         
         // Enable GitHub Pages
         await enableGitHubPages();
         
-        showPage('editor');
         alert('Site created successfully and GitHub Pages enabled!');
         
         // Refresh the repo list
         await loadRepos();
-        showLoading(false);
       } catch (error) {
         console.error('Error creating repository:', error);
         alert(`Error: ${error.message}`);
-        showLoading(false);
       }
     }
 
-    // Enable GitHub Pages for the repository
     async function enableGitHubPages() {
       try {
         const response = await fetch(`https://api.github.com/repos/${username}/${repoName}/pages`, {
@@ -919,393 +246,43 @@
       }
     }
 
-    // Initialize the page editor
     function initEditor() {
-      if (document.querySelector('#editor-canvas style')) {
-        return; // Editor already initialized
-      }
-      
-      // Add component styles
-      const styleElement = document.createElement('style');
-      styleElement.textContent = componentCSS;
-      document.querySelector('#editor-canvas').appendChild(styleElement);
-      
-      // Clear any existing content
-      document.getElementById('page-content').innerHTML = '';
-      
-      // Set up drag and drop
-      setupDragAndDrop();
-      
-      // Set up click handlers for component selection
-      document.getElementById('editor-canvas').addEventListener('click', handleCanvasClick);
-      
-      // Initialize editor history
-      editorHistory = [];
-      historyIndex = -1;
-      
-      // Capture initial state
-      saveState();
-    }
-
-    // Create a new component
-    function createComponent(type) {
-      const id = editorState.nextId++;
-      const template = componentTemplates[type];
-      
-      if (!template) {
-        console.error(`Unknown component type: ${type}`);
-        return null;
-      }
-      
-      // Create wrapper for the HTML content
-      const container = document.createElement('div');
-      container.innerHTML = template.html.replace(/\${id}/g, id);
-      const element = container.firstChild;
-      
-      // Store component data
-      editorState.components.push({
-        id: id,
-        type: type,
-        element: element
-      });
-      
-      // Make the element selectable and movable
-      setupComponent(element);
-      
-      return element;
-    }
-
-    // Set up component event handlers
-    function setupComponent(element) {
-      // Prevent clicks within component from bubbling to canvas
-      element.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectElement(element);
-      });
-      
-      // Add drag functionality
-      element.draggable = true;
-      element.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', element.id);
-        e.dataTransfer.effectAllowed = 'move';
-      });
-    }
-
-    // Set up drag and drop for the editor canvas
-    function setupDragAndDrop() {
-      const dropzones = document.querySelectorAll('.dropzone');
-      
-      dropzones.forEach(zone => {
-        zone.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          zone.classList.add('dragover');
-        });
-        
-        zone.addEventListener('dragleave', () => {
-          zone.classList.remove('dragover');
-        });
-        
-        zone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          zone.classList.remove('dragover');
-          
-          const id = e.dataTransfer.getData('text/plain');
-          const element = document.getElementById(id);
-          
-          if (element) {
-            zone.appendChild(element);
-            saveState();
+      if (editor) return;
+      editor = grapesjs.init({
+        container: '#gjs',
+        height: '100%',
+        storageManager: false,
+        plugins: [
+          'gjs-preset-webpage',
+          'grapesjs-plugin-ckeditor',
+          'grapesjs-blocks-basic',
+          'grapesjs-plugin-export',
+          'grapesjs-plugin-filestorage',
+          'grapesjs-advance-components'
+        ],
+        pluginsOpts: {
+          'gjs-preset-webpage': {
+            modalImportTitle: 'Import Template',
+            modalImportLabel: 'Paste your HTML/CSS here:',
+            modalImportContent: '<div>Paste your code here</div>'
           }
-        });
-      });
-      
-      // Set up main page content as dropzone
-      const pageContent = document.getElementById('page-content');
-      
-      pageContent.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        pageContent.classList.add('dragover');
-      });
-      
-      pageContent.addEventListener('dragleave', () => {
-        pageContent.classList.remove('dragover');
-      });
-      
-      pageContent.addEventListener('drop', (e) => {
-        e.preventDefault();
-        pageContent.classList.remove('dragover');
-        
-        const id = e.dataTransfer.getData('text/plain');
-        const element = document.getElementById(id);
-        
-        if (element) {
-          pageContent.appendChild(element);
-          saveState();
         }
       });
     }
 
-    // Handle clicks on the canvas
-    function handleCanvasClick(e) {
-      // If clicked outside of a component, deselect
-      if (e.target.id === 'editor-canvas' || e.target.id === 'page-content') {
-        deselectAll();
-      }
-    }
-
-    // Add a new component to the page
-    function addComponent(type) {
-      const element = createComponent(type);
-      if (!element) return;
-      
-      document.getElementById('page-content').appendChild(element);
-      selectElement(element);
-      saveState();
-    }
-
-    // Select an element
-    function selectElement(element) {
-      deselectAll();
-      
-      element.classList.add('selected');
-      selectedElement = element;
-      editorState.selectedId = element.id;
-      
-      // Show properties panel
-      document.getElementById('no-selection').classList.add('hidden');
-      const propertiesPanel = document.getElementById('element-properties');
-      propertiesPanel.classList.remove('hidden');
-      
-      // Generate properties UI
-      generatePropertiesUI(element);
-    }
-
-    // Deselect all elements
-    function deselectAll() {
-      const selected = document.querySelectorAll('.selected');
-      selected.forEach(el => el.classList.remove('selected'));
-      
-      selectedElement = null;
-      editorState.selectedId = null;
-      
-      // Hide properties panel
-      document.getElementById('no-selection').classList.remove('hidden');
-      document.getElementById('element-properties').classList.add('hidden');
-    }
-
-    // Generate properties UI based on component type
-    function generatePropertiesUI(element) {
-      const propertiesPanel = document.getElementById('element-properties');
-      propertiesPanel.innerHTML = '';
-      
-      const type = element.getAttribute('data-type');
-      if (!type || !componentTemplates[type]) return;
-      
-      const properties = componentTemplates[type].properties;
-      
-      // Add element type
-      const typeHeader = document.createElement('h4');
-      typeHeader.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Properties`;
-      propertiesPanel.appendChild(typeHeader);
-      
-      // Add properties
-      Object.entries(properties).forEach(([propName, propConfig]) => {
-        const propertyRow = document.createElement('div');
-        propertyRow.className = 'property-row';
-        
-        const label = document.createElement('div');
-        label.className = 'property-label';
-        label.textContent = propName.charAt(0).toUpperCase() + propName.slice(1);
-        propertyRow.appendChild(label);
-        
-        const valueContainer = document.createElement('div');
-        valueContainer.className = 'property-value';
-        
-        let input;
-        
-        switch (propConfig.type) {
-          case 'text':
-            input = document.createElement('input');
-            input.type = 'text';
-            break;
-          case 'textarea':
-            input = document.createElement('textarea');
-            input.rows = 4;
-            break;
-          case 'select':
-            input = document.createElement('select');
-            propConfig.options.forEach(option => {
-              const optEl = document.createElement('option');
-              optEl.value = option;
-              optEl.textContent = option;
-              input.appendChild(optEl);
-            });
-            break;
-          case 'color':
-            input = document.createElement('input');
-            input.type = 'color';
-            break;
-          default:
-            input = document.createElement('input');
-            input.type = 'text';
-        }
-        
-        // Set current value or default
-        if (propName === 'text') {
-          input.value = element.textContent;
-        } else if (element.hasAttribute(propName)) {
-          input.value = element.getAttribute(propName);
-        } else {
-          input.value = propConfig.default;
-        }
-        
-        // Add change event handler
-        input.addEventListener('change', () => {
-          updateComponentProperty(element, propName, input.value);
-        });
-        
-        valueContainer.appendChild(input);
-        propertyRow.appendChild(valueContainer);
-        propertiesPanel.appendChild(propertyRow);
-      });
-      
-      // Add delete button
-      const deleteRow = document.createElement('div');
-      deleteRow.className = 'property-row';
-      deleteRow.style.marginTop = '20px';
-      
-      const deleteButton = document.createElement('button');
-      deleteButton.textContent = 'Delete Component';
-      deleteButton.className = 'button-primary';
-      deleteButton.style.backgroundColor = '#dc3545';
-      deleteButton.onclick = () => {
-        if (confirm('Are you sure you want to delete this component?')) {
-          element.remove();
-          deselectAll();
-          saveState();
-        }
-      };
-      
-      deleteRow.appendChild(deleteButton);
-      propertiesPanel.appendChild(deleteRow);
-    }
-
-    // Update component property
-    function updateComponentProperty(element, propName, value) {
-      if (propName === 'text') {
-        element.textContent = value;
-      } else if (propName === 'src' && element.tagName === 'IMG') {
-        element.src = value;
-      } else if (propName === 'alt' && element.tagName === 'IMG') {
-        element.alt = value;
-      } else {
-        element.setAttribute(propName, value);
-      }
-      
-      saveState();
-    }
-
-    // Toggle component menu visibility
-    function toggleComponentMenu() {
-      const menu = document.getElementById('component-menu');
-      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-
-    // Toggle properties panel visibility
-    function togglePropertiesPanel() {
-      const panel = document.getElementById('properties-panel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-
-    // Preview mode toggle
-    function previewPage() {
-      const editorCanvas = document.getElementById('editor-canvas');
-      isEditMode = !isEditMode;
-      
-      if (isEditMode) {
-        editorCanvas.classList.remove('preview-mode');
-      } else {
-        editorCanvas.classList.add('preview-mode');
-        deselectAll();
-      }
-    }
-
-    // Save current editor state to history
-    function saveState() {
-      // Get current HTML
-      const currentContent = document.getElementById('page-content').innerHTML;
-      
-      // If we've navigated through history, truncate forward history
-      if (historyIndex < editorHistory.length - 1) {
-        editorHistory = editorHistory.slice(0, historyIndex + 1);
-      }
-      
-      // Add current state to history
-      editorHistory.push(currentContent);
-      historyIndex = editorHistory.length - 1;
-      
-      // Limit history size
-      if (editorHistory.length > 30) {
-        editorHistory.shift();
-        historyIndex--;
-      }
-    }
-
-    // Undo last action
-    function undoAction() {
-      if (historyIndex > 0) {
-        historyIndex--;
-        document.getElementById('page-content').innerHTML = editorHistory[historyIndex];
-        refreshComponentHandlers();
-      }
-    }
-
-    // Redo last undone action
-    function redoAction() {
-      if (historyIndex < editorHistory.length - 1) {
-        historyIndex++;
-        document.getElementById('page-content').innerHTML = editorHistory[historyIndex];
-        refreshComponentHandlers();
-      }
-    }
-
-    // Refresh component handlers after undo/redo
-    function refreshComponentHandlers() {
-      const components = document.querySelectorAll('.editable-component');
-      components.forEach(comp => {
-        setupComponent(comp);
-      });
-    }
-
-    // Save editor content locally
-    function saveEditorContent() {
-      pageContent = document.getElementById('page-content').innerHTML;
-      alert('Content saved to memory!');
-    }
-
-    // Save content to GitHub
     async function saveToGitHub() {
       try {
-        showLoading(true);
-        
-        const content = document.getElementById('page-content').innerHTML;
-        const styles = pageStyles || componentCSS;
-        
+        savedHTML = editor.getHtml();
+        savedCSS = editor.getCss();
         const fullContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${repoName}</title>
-  <style>
-${styles}
-  </style>
+  <style>${savedCSS}</style>
 </head>
-<body>
-${content}
-</body>
+<body>${savedHTML}</body>
 </html>`;
 
         const path = 'index.html';
@@ -1350,7 +327,6 @@ ${content}
 
         if (putResp.ok) {
           alert('Published successfully!');
-          showLoading(false);
           return true;
         } else {
           throw new Error('Failed to save content to GitHub');
@@ -1358,37 +334,12 @@ ${content}
       } catch (error) {
         console.error('Error saving to GitHub:', error);
         alert(`Failed to publish: ${error.message}`);
-        showLoading(false);
         return false;
       }
     }
 
-    // Show/hide loading indicator
-    function showLoading(show) {
-      let loadingEl = document.querySelector('.loading');
-      
-      if (show) {
-        if (!loadingEl) {
-          loadingEl = document.createElement('div');
-          loadingEl.className = 'loading';
-          
-          const spinner = document.createElement('div');
-          spinner.className = 'spinner';
-          loadingEl.appendChild(spinner);
-          
-          document.body.appendChild(loadingEl);
-        }
-        loadingEl.style.display = 'flex';
-      } else if (loadingEl) {
-        loadingEl.style.display = 'none';
-      }
-    }
-
-    // Initialize on page load
-    window.onload = function() {
-      loadToken();
-      showPage('home');
-    };
+    loadToken();
+    showPage('home');
   </script>
 </body>
 </html>
