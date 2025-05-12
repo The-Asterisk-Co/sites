@@ -1,0 +1,154 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #f0f0f0;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  #gjs {
+    height: 100vh;
+    transition: all 0.3s ease;
+  }
+  
+  /* Main editor theme - Dark mode with accent colors */
+  :root {
+    --main-bg-color: #121212;
+    --panel-bg-color: #1a1a1a;
+    --accent-color: #4c8bf5;
+    --accent-hover: #65a1ff;
+    --secondary-color: #1de9b6;
+    --text-primary: #f0f0f0;
+    --text-secondary: #b0b0b0;
+    --border-color: #333;
+    --btn-bg: #292929;
+    --btn-hover: #3a3a3a;
+    --item-hover: rgba(76, 139, 245, 0.15);
+  }
+  
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  
+  /* Add custom animation for dropped components */
+  @keyframes drop-highlight {
+    0% { opacity: 0.8; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  
+  .gjs-comp-selected-new {
+    animation: drop-highlight 0.5s ease-out;
+  }
+    /* Basic layout styles */
+    body, html {  
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    
+    /* Navigation bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      align-items: center;
+    }
+    
+    button {
+      background-color: #5a5a5a;
+      color: rgb(255, 255, 255);
+      border: none;
+      padding: 5px 15px;
+      margin-right: 5px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+    
+    button:hover {
+      background-color: #646464;
+    }
+
+    .button-primary {
+      background-color: #dbdbdb;
+      color: black;
+      border: none;
+      padding: 5px 15px;
+      margin-right: 5px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .button-primary:hover {
+      background-color: #ffffff5b;
+    }
+    /* Page containers */
+    .page {
+      padding: 20px;
+      display: none;
+    }
+    
+    /* GrapesJS Editor fix */
+    #editor {
+      display: none;
+      position: absolute;
+      top: 50px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    
+    #gjs {
+      height: calc(100% - 50px);
+      width: 100%;
+      overflow: hidden;
+    }
+    
+    #site-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    #site-list li {
+      margin-bottom: 10px;
+      padding: 8px;
+      background-color:rgba(255, 255, 255, 0.233);
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Form styling */
+    input, button {
+      margin: 8px 0;
+      padding: 8px;
+    }
+    
+    .token-note {
+      color: #666;
+      font-size: 0.9em;
+    }
